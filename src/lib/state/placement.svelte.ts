@@ -18,6 +18,18 @@ class PlacementStore {
     this.last = p;
   };
 
+  /**
+   * Freeze the selected image's currently-shown placement onto it. Images that
+   * only inherit the sticky default (placement === null) otherwise float: editing
+   * a later image moves `last` and silently shifts them. Call before navigating
+   * away so each image you've viewed keeps the position it had. Touched images
+   * already carry an explicit placement, so this leaves them untouched.
+   */
+  commitCurrent = () => {
+    const img = queue.current;
+    if (img && !img.placement) img.placement = { ...this.last };
+  };
+
   /** Apply a placement (e.g. from a preset) to the default and current image. */
   apply = (p: Placement) => {
     this.last = { ...p };

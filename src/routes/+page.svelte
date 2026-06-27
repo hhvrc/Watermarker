@@ -11,6 +11,17 @@
 
   // Local alias so the {#if current} block narrows away the null case.
   const current = $derived(queue.current);
+
+  // Freeze the current image's placement before moving, so an image still
+  // inheriting the sticky default doesn't drift when a later image is edited.
+  function prev() {
+    placement.commitCurrent();
+    queue.prev();
+  }
+  function next() {
+    placement.commitCurrent();
+    queue.next();
+  }
 </script>
 
 <section class="flex min-h-0 flex-col overflow-hidden p-3">
@@ -21,8 +32,8 @@
           Image {queue.index + 1} / {queue.images.length}: {current.name}
         </span>
         <div class="flex items-center gap-1.5">
-          <Button onclick={queue.prev} disabled={queue.index <= 0}>← Prev</Button>
-          <Button onclick={queue.next} disabled={queue.index >= queue.images.length - 1}>
+          <Button onclick={prev} disabled={queue.index <= 0}>← Prev</Button>
+          <Button onclick={next} disabled={queue.index >= queue.images.length - 1}>
             Next →
           </Button>
         </div>

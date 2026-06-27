@@ -24,6 +24,7 @@ class WorkspaceStore {
   };
 
   editImage = (i: number) => {
+    placement.commitCurrent();
     queue.select(i);
     this.mode = 'edit';
   };
