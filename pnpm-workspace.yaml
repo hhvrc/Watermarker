@@ -1,0 +1,16 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+blockExoticSubdeps: true
+minimumReleaseAgeExclude:
+  - cookie@0.7.0
+#minimumReleaseAge: 4320 # 3 days
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - esbuild
+overrides:
+  cookie@<0.7.0: ^0.7.0
+
+#trustPolicy: no-downgrade

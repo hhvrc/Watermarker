@@ -1,0 +1,65 @@
+name: Release
+
+# Build and publish the Tauri app when a version tag (v*) is pushed.
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Needed by tauri-action to create the GitHub Release and upload bundles.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build Tauri bundle (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Icons and other binary assets live in Git LFS.
+          lfs: true
+
+      # The pnpm version comes from package.json's "packageManager" field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 26
+          cache: pnpm
+
+      # rustup is preinstalled on the runner; just pin to stable.
+      - name: Set up Rust
+        run: rustup default stable
+
+      - name: Cache cargo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
+            ${{ runner.os }}-cargo-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # tauri-action runs `beforeBuildCommand` (pnpm build), compiles the
+      # Rust app, bundles it, and attaches the artifacts to a draft release.
+      - name: Build and release
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # action-v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Watermarker ${{ github.ref_name }}'
+          releaseDraft: true
+          prerelease: false

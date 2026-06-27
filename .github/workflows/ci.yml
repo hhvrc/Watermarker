@@ -1,0 +1,99 @@
+name: CI
+
+# Run on pushes and pull requests targeting the default branch.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Cancel an in-progress run when a newer commit is pushed to the same
+# branch/PR so we don't waste runners on superseded work.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Frontend: type-check (svelte-check) and unit tests (vitest).
+  # Runs on Linux because the JS toolchain has no platform-specific needs here.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (check + test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Binary assets (png/ico/icns/...) are stored in Git LFS.
+          lfs: true
+
+      # pnpm must be installed before setup-node so the pnpm cache can resolve.
+      # The pnpm version comes from package.json's "packageManager" field.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `check` chains `svelte-kit sync` first, so generated types exist.
+      - name: Type-check
+        run: pnpm check
+
+      - name: Unit tests
+        run: pnpm test
+
+  # ---------------------------------------------------------------------------
+  # Rust: format, lint and test the Tauri crate.
+  # Runs on Windows (the app's target) to avoid installing Tauri's Linux
+  # system dependencies (webkit2gtk, etc.). Uses the runner's preinstalled
+  # rustup and the official actions/cache, no third-party actions.
+  # ---------------------------------------------------------------------------
+  rust:
+    name: Rust (fmt + clippy + test)
+    runs-on: windows-latest
+    defaults:
+      run:
+        # All cargo steps operate inside the Tauri crate.
+        working-directory: src-tauri
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          lfs: true
+
+      # rustup ships preinstalled on GitHub runners; just select stable and
+      # ensure the components we lint with are present.
+      - name: Set up Rust
+        run: |
+          rustup default stable
+          rustup component add rustfmt clippy
+
+      # Cache the cargo registry/git deps and the crate's target dir.
+      - name: Cache cargo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test

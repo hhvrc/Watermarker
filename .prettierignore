@@ -1,0 +1,14 @@
+# Generated / vendored files. Never format these.
+node_modules
+.svelte-kit
+build
+dist
+pnpm-lock.yaml
+pnpm-workspace.yaml
+src-tauri/target
+src-tauri/gen
+static
+*.png
+*.ico
+*.icns
+*.svg
