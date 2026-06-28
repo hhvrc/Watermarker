@@ -27,6 +27,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -34,5 +35,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/hhvrc/Watermarker/releases/latest/download/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQyOTU0RTlFQ0M0RDA0RQpSV1JPME1UczZWUXBCR1BYN29BamdqNGRnWnNYOWV3bE9CdmVMMzRkYU9TSTBsMHpoVUpxMS9BQQo="
+    }
   }
 }

@@ -87,6 +87,10 @@ export interface AppSettings {
   placement: Placement | null;
   /** Saved presets, in user order. */
   presets: Preset[];
+  /** A release version the user chose to skip (hidden until a newer one ships). */
+  skipped_version: string | null;
+  /** When true, the app never checks for or prompts about updates. */
+  updates_disabled: boolean;
 }
 
 /** Read settings; Rust prunes any persisted paths that no longer exist. */

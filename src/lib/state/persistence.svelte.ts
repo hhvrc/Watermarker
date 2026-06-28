@@ -7,6 +7,7 @@ import { watermark } from './watermark.svelte';
 import { placement } from './placement.svelte';
 import { presets } from './presets.svelte';
 import { output } from './output.svelte';
+import { updater } from './updater.svelte';
 
 class Persistence {
   #timer: ReturnType<typeof setTimeout> | null = null;
@@ -19,6 +20,8 @@ class Persistence {
     strip_metadata: output.settings.strip_metadata,
     placement: placement.last,
     presets: presets.list,
+    skipped_version: updater.skippedVersion,
+    updates_disabled: updater.disabled,
   });
 
   /** Restore persisted settings into the stores. Rust has already pruned any
@@ -36,6 +39,8 @@ class Persistence {
     output.settings.strip_metadata = saved.strip_metadata;
     if (saved.placement) placement.last = saved.placement;
     if (saved.presets) presets.list = saved.presets;
+    updater.disabled = saved.updates_disabled;
+    updater.skippedVersion = saved.skipped_version;
 
     if (saved.watermark_path) {
       try {

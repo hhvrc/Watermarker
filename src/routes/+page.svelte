@@ -33,9 +33,7 @@
         </span>
         <div class="flex items-center gap-1.5">
           <Button onclick={prev} disabled={queue.index <= 0}>← Prev</Button>
-          <Button onclick={next} disabled={queue.index >= queue.images.length - 1}>
-            Next →
-          </Button>
+          <Button onclick={next} disabled={queue.index >= queue.images.length - 1}>Next →</Button>
         </div>
       </div>
       <div class="min-h-0 flex-1">

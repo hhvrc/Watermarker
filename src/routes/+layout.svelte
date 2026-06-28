@@ -4,8 +4,10 @@
   import Header from './Header.svelte';
   import Sidebar from './Sidebar.svelte';
   import DropOverlay from '$lib/components/DropOverlay.svelte';
+  import UpdateDialog from '$lib/components/UpdateDialog.svelte';
   import { dnd } from '$lib/services/dnd.svelte';
   import { persistence } from '$lib/state/persistence.svelte';
+  import { updater } from '$lib/state/updater.svelte';
 
   interface Props {
     children: Snippet;
@@ -15,8 +17,12 @@
 
   onMount(() => {
     void dnd.register();
-    // Restore settings, then autosave on any later change.
-    void persistence.load().then(() => persistence.start());
+    // Restore settings, then autosave on any later change, then check for an
+    // update (load first so skip/disable prefs are honored).
+    void persistence.load().then(() => {
+      persistence.start();
+      void updater.check();
+    });
   });
 
   onDestroy(() => {
@@ -34,4 +40,5 @@
   </main>
 
   <DropOverlay />
+  <UpdateDialog />
 </div>

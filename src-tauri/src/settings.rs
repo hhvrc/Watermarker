@@ -41,6 +41,13 @@ pub struct Settings {
     /// Saved presets, in user order.
     #[serde(default)]
     pub presets: Vec<Preset>,
+    /// A release version the user chose to skip; the update prompt stays hidden
+    /// for exactly this version but reappears for any newer one.
+    #[serde(default)]
+    pub skipped_version: Option<String>,
+    /// When true, the app never checks for or prompts about updates.
+    #[serde(default)]
+    pub updates_disabled: bool,
 }
 
 /// The directory holding managed watermark copies, created on demand.
