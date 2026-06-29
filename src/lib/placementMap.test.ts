@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveRect, DEFAULT_PLACEMENT } from './placement';
+import { resolveRect, DEFAULT_PLACEMENT, maxFitWidthFrac } from './placement';
 import {
   canvasPointToImage,
   pointInRect,
@@ -7,6 +7,8 @@ import {
   dragToPlacement,
   nearCorner,
   resizeWidthFrac,
+  rotatePoint,
+  anchorPoint,
 } from './placementMap';
 import type { Placement } from './types';
 
@@ -18,6 +20,71 @@ const base: Placement = {
   rot_deg: 0,
   opacity: 1,
 };
+
+describe('rotatePoint', () => {
+  it('rotates 90 degrees about a center', () => {
+    // A point directly right of center maps to directly below it (+y is down).
+    const p = rotatePoint(20, 10, 10, 10, 90);
+    expect(p.x).toBeCloseTo(10);
+    expect(p.y).toBeCloseTo(20);
+  });
+
+  it('round-trips with the inverse angle', () => {
+    const fwd = rotatePoint(35, 12, 20, 20, 37);
+    const back = rotatePoint(fwd.x, fwd.y, 20, 20, -37);
+    expect(back.x).toBeCloseTo(35);
+    expect(back.y).toBeCloseTo(12);
+  });
+
+  it('inverse-rotating a rotated corner lands back inside the axis-aligned box', () => {
+    // Box [0,100]^2 rotated 45° about its center; a drawn corner inverse-rotated
+    // returns to the original axis-aligned corner, so hit-tests still match.
+    const r = { x: 0, y: 0, w: 100, h: 100 };
+    const cx = 50;
+    const cy = 50;
+    const drawn = rotatePoint(r.x, r.y, cx, cy, 45); // where the TL handle renders
+    const local = rotatePoint(drawn.x, drawn.y, cx, cy, -45);
+    expect(local.x).toBeCloseTo(0);
+    expect(local.y).toBeCloseTo(0);
+  });
+});
+
+describe('maxFitWidthFrac', () => {
+  it('is bounded by width for a wide watermark on a square image', () => {
+    // aspect 2 (wide): width binds first, so best fit is full image width.
+    expect(maxFitWidthFrac(1000, 1000, 2, 0)).toBeCloseTo(1);
+  });
+
+  it('is bounded by height for a tall watermark', () => {
+    // aspect 0.5 (tall): at width_frac f, height = 2*f*imgW; fills height at f=0.5.
+    expect(maxFitWidthFrac(1000, 1000, 0.5, 0)).toBeCloseTo(0.5);
+  });
+
+  it('accounts for rotation (90° swaps the binding dimension)', () => {
+    // A wide mark rotated 90° becomes tall; height now binds at f=1 on a square.
+    expect(maxFitWidthFrac(1000, 1000, 2, 90)).toBeCloseTo(1);
+    // A tall mark (aspect 0.5) rotated 90° becomes wide (bbox width = 2× drawn
+    // width), so width binds first at f=0.5.
+    expect(maxFitWidthFrac(1000, 1000, 0.5, 90)).toBeCloseTo(0.5);
+  });
+});
+
+describe('anchorPoint', () => {
+  // img 1000x800 -> shorter side 800, margin 0.05 -> 40px gap.
+  it('pins to the anchored corner with margin', () => {
+    expect(anchorPoint({ ...base, anchor: 'TopLeft' }, 1000, 800)).toEqual({ x: 40, y: 40 });
+    expect(anchorPoint({ ...base, anchor: 'BottomRight' }, 1000, 800)).toEqual({
+      x: 1000 - 40,
+      y: 800 - 40,
+    });
+  });
+
+  it('uses the image center for centered anchors', () => {
+    expect(anchorPoint({ ...base, anchor: 'Center' }, 1000, 800)).toEqual({ x: 500, y: 400 });
+    // A centered axis (e.g. TopCenter) is centered on that axis only.
+    expect(anchorPoint({ ...base, anchor: 'TopCenter' }, 1000, 800)).toEqual({ x: 500, y: 40 });
+  });
+});
 
 describe('canvasPointToImage', () => {
   it('maps through CSS scaling', () => {

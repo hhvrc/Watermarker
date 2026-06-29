@@ -126,18 +126,32 @@ pub fn resolve(p: &Placement, img_w: u32, img_h: u32, wm_aspect: f32) -> Rect {
     let mx = p.margin_x_frac * m_ref;
     let my = p.margin_y_frac * m_ref;
 
-    let x = match p.anchor.horizontal() {
-        H::Left => mx,
-        H::Center => (iw - w) * 0.5,
-        H::Right => iw - w - mx,
+    // Half-extents of the watermark's axis-aligned bounding box *after* rotation.
+    // Anchoring against these (rather than the unrotated box) keeps the rotated
+    // watermark pinned in its corner with the requested margin at any angle, so
+    // scaling grows it from the anchored corner instead of sliding it away.
+    let (sin, cos) = p.rot_deg.to_radians().sin_cos();
+    let hw = (w * cos.abs() + h * sin.abs()) * 0.5;
+    let hh = (w * sin.abs() + h * cos.abs()) * 0.5;
+
+    // Center of the (unrotated) box; the watermark rotates about this point.
+    let cx = match p.anchor.horizontal() {
+        H::Left => mx + hw,
+        H::Center => iw * 0.5,
+        H::Right => iw - mx - hw,
     };
-    let y = match p.anchor.vertical() {
-        V::Top => my,
-        V::Middle => (ih - h) * 0.5,
-        V::Bottom => ih - h - my,
+    let cy = match p.anchor.vertical() {
+        V::Top => my + hh,
+        V::Middle => ih * 0.5,
+        V::Bottom => ih - my - hh,
     };
 
-    Rect { x, y, w, h }
+    Rect {
+        x: cx - w * 0.5,
+        y: cy - h * 0.5,
+        w,
+        h,
+    }
 }
 
 #[cfg(test)]
@@ -194,6 +208,22 @@ mod tests {
             760.0,
             660.0,
         );
+    }
+
+    #[test]
+    fn rotation_anchors_the_rotated_bounding_box() {
+        // A 90° rotation swaps the watermark's visual extent. The *rotated*
+        // bounding box (not the unrotated box) must keep the requested margin
+        // from the anchored edges, so the watermark stays pinned in its corner.
+        let mut pl = p(Anchor::BottomRight);
+        pl.rot_deg = 90.0;
+        // img 1000x1000 -> m_ref=1000, margin=50; w=200, h=100 (aspect 2).
+        let r = resolve(&pl, 1000, 1000, ASPECT);
+        let cx = r.x + r.w * 0.5;
+        let cy = r.y + r.h * 0.5;
+        // Rotated half-extents at 90°: hw = h/2 = 50, hh = w/2 = 100.
+        assert!((cx + 50.0 - (1000.0 - 50.0)).abs() < 1e-3, "right edge");
+        assert!((cy + 100.0 - (1000.0 - 50.0)).abs() < 1e-3, "bottom edge");
     }
 
     #[test]

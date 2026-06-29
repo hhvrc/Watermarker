@@ -103,6 +103,47 @@ export function dist(ax: number, ay: number, bx: number, by: number): number {
   return Math.hypot(ax - bx, ay - by);
 }
 
+/**
+ * The fixed image-space point a placement is anchored to: the corner/edge the
+ * watermark is pinned against (with its margin). Scaling pivots about this point
+ * so a resize drag is always measured relative to the anchor. Margins use the
+ * shorter side, matching `resolveRect`.
+ */
+export function anchorPoint(
+  p: Placement,
+  imgW: number,
+  imgH: number,
+): { x: number; y: number } {
+  const mRef = Math.min(imgW, imgH);
+  const mx = p.margin_x_frac * mRef;
+  const my = p.margin_y_frac * mRef;
+  const h = horizontalOf(p.anchor);
+  const v = verticalOf(p.anchor);
+  const x = h === 'Left' ? mx : h === 'Right' ? imgW - mx : imgW / 2;
+  const y = v === 'Top' ? my : v === 'Bottom' ? imgH - my : imgH / 2;
+  return { x, y };
+}
+
+/**
+ * Rotate `(px, py)` by `deg` degrees about center `(cx, cy)`. Used to map a
+ * pointer into the watermark's local (unrotated) frame for hit-testing: pass
+ * `-rot_deg` so a rotated box can be tested with the axis-aligned helpers.
+ */
+export function rotatePoint(
+  px: number,
+  py: number,
+  cx: number,
+  cy: number,
+  deg: number,
+): { x: number; y: number } {
+  const rad = (deg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const dx = px - cx;
+  const dy = py - cy;
+  return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
+}
+
 /** The four corner points of a rect. */
 export function corners(r: Rect): { x: number; y: number }[] {
   return [

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { ImageRef, Placement, WatermarkRef } from '$lib/types';
-  import { resolveRect } from '$lib/placement';
+  import { resolveRect, maxFitWidthFrac } from '$lib/placement';
   import {
     canvasPointToImage,
     pointInRect,
@@ -10,6 +10,9 @@
     nearCorner,
     dist,
     resizeWidthFrac,
+    rotatePoint,
+    anchorPoint,
+    MIN_WIDTH_FRAC,
   } from '$lib/placementMap';
 
   interface Props {
@@ -32,7 +35,10 @@
   let startBox = { x: 0, y: 0, w: 0, h: 0 };
   let startPointer = { x: 0, y: 0 };
   let startWidthFrac = 0;
-  let resizeCenter = { x: 0, y: 0 };
+  // Fixed reference for a resize drag: the placement's anchor point. Scaling is
+  // always measured relative to the anchor (the image center for centered
+  // anchors), so it grows monotonically from there.
+  let resizeRef = { x: 0, y: 0 };
   let resizeStartDist = 0;
 
   const wmAspect = $derived(watermark ? watermark.width / watermark.height : 1);
@@ -127,6 +133,12 @@
     const r = resolveRect(placement, canvas.width, canvas.height, wmAspect);
     const accent = 'rgba(229,229,229,0.95)';
     ctx.save();
+    // Rotate the outline and handles about the box center so the selection
+    // tracks the (rotated) watermark.
+    ctx.translate(r.x + r.w / 2, r.y + r.h / 2);
+    ctx.rotate((placement.rot_deg * Math.PI) / 180);
+    ctx.translate(-(r.x + r.w / 2), -(r.y + r.h / 2));
+
     ctx.strokeStyle = accent;
     ctx.lineWidth = Math.max(1, canvas.width / 600);
     ctx.setLineDash([8, 5]);
@@ -142,6 +154,13 @@
     ctx.restore();
   }
 
+  // Map an image-space pointer into the watermark's local (unrotated) frame so
+  // the axis-aligned hit-tests work when the box is rotated.
+  function toLocal(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }) {
+    if (!placement.rot_deg) return p;
+    return rotatePoint(p.x, p.y, r.x + r.w / 2, r.y + r.h / 2, -placement.rot_deg);
+  }
+
   function toImage(e: PointerEvent) {
     const rect = canvas.getBoundingClientRect();
     return canvasPointToImage(e.clientX, e.clientY, rect, canvas.width, canvas.height);
@@ -151,13 +170,14 @@
     if (!watermark) return;
     const p = toImage(e);
     const r = resolveRect(placement, canvas.width, canvas.height, wmAspect);
+    const lp = toLocal(p, r);
 
-    if (nearCorner(p.x, p.y, r, handleRadius())) {
+    if (nearCorner(lp.x, lp.y, r, handleRadius())) {
       mode = 'resize';
       startWidthFrac = placement.width_frac;
-      resizeCenter = { x: r.x + r.w / 2, y: r.y + r.h / 2 };
-      resizeStartDist = dist(p.x, p.y, resizeCenter.x, resizeCenter.y);
-    } else if (pointInRect(p.x, p.y, r)) {
+      resizeRef = anchorPoint(placement, canvas.width, canvas.height);
+      resizeStartDist = dist(p.x, p.y, resizeRef.x, resizeRef.y);
+    } else if (pointInRect(lp.x, lp.y, r)) {
       mode = 'move';
       startBox = r;
       startPointer = p;
@@ -172,9 +192,10 @@
     if (mode === 'none') {
       if (!watermark) return;
       const r = resolveRect(placement, canvas.width, canvas.height, wmAspect);
-      canvas.style.cursor = nearCorner(p.x, p.y, r, handleRadius())
+      const lp = toLocal(p, r);
+      canvas.style.cursor = nearCorner(lp.x, lp.y, r, handleRadius())
         ? 'nwse-resize'
-        : pointInRect(p.x, p.y, r)
+        : pointInRect(lp.x, lp.y, r)
           ? 'move'
           : 'default';
       return;
@@ -191,8 +212,14 @@
         ),
       );
     } else {
-      const d1 = dist(p.x, p.y, resizeCenter.x, resizeCenter.y);
-      onchange({ ...placement, width_frac: resizeWidthFrac(startWidthFrac, resizeStartDist, d1) });
+      const d1 = dist(p.x, p.y, resizeRef.x, resizeRef.y);
+      // Cap growth at best fit so the (rotated) watermark can't be dragged past
+      // the binding image edge.
+      const maxFit = maxFitWidthFrac(canvas.width, canvas.height, wmAspect, placement.rot_deg);
+      onchange({
+        ...placement,
+        width_frac: resizeWidthFrac(startWidthFrac, resizeStartDist, d1, MIN_WIDTH_FRAC, maxFit),
+      });
     }
   }
 

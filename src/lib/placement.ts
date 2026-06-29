@@ -44,6 +44,29 @@ export interface Rect {
   h: number;
 }
 
+/**
+ * The largest `width_frac` at which the watermark's bounding box — after its
+ * rotation — still fits inside the image, bounded by whichever dimension it
+ * reaches first. Lets the Size control mean "% of best fit" (1.0 = touching the
+ * binding edge) instead of "% of image width", so a tall or rotated watermark
+ * can't be scaled past the top/bottom. Returns 1 when inputs are unknown.
+ */
+export function maxFitWidthFrac(
+  imgW: number,
+  imgH: number,
+  wmAspect: number,
+  rotDeg: number,
+): number {
+  if (!imgW || !imgH || !wmAspect) return 1;
+  const rad = (rotDeg * Math.PI) / 180;
+  const c = Math.abs(Math.cos(rad));
+  const s = Math.abs(Math.sin(rad));
+  // Rotated bbox width/height per unit width_frac, divided out by image size.
+  const fitByWidth = 1 / (c + s / wmAspect);
+  const fitByHeight = imgH / imgW / (s + c / wmAspect);
+  return Math.min(fitByWidth, fitByHeight);
+}
+
 type H = 'Left' | 'Center' | 'Right';
 type V = 'Top' | 'Middle' | 'Bottom';
 
@@ -88,29 +111,39 @@ export function resolveRect(p: Placement, imgW: number, imgH: number, wmAspect: 
   const mx = p.margin_x_frac * mRef;
   const my = p.margin_y_frac * mRef;
 
-  let x: number;
+  // Half-extents of the watermark's bounding box *after* rotation. Anchoring
+  // against these keeps the rotated watermark pinned in its corner at any angle,
+  // so scaling grows it from the anchored corner. Mirrors Rust `resolve`.
+  const rad = (p.rot_deg * Math.PI) / 180;
+  const cos = Math.abs(Math.cos(rad));
+  const sin = Math.abs(Math.sin(rad));
+  const hw = (w * cos + h * sin) * 0.5;
+  const hh = (w * sin + h * cos) * 0.5;
+
+  // Center of the (unrotated) box; the watermark rotates about this point.
+  let cx: number;
   switch (horizontalOf(p.anchor)) {
     case 'Left':
-      x = mx;
+      cx = mx + hw;
       break;
     case 'Right':
-      x = imgW - w - mx;
+      cx = imgW - mx - hw;
       break;
     default:
-      x = (imgW - w) * 0.5;
+      cx = imgW * 0.5;
   }
 
-  let y: number;
+  let cy: number;
   switch (verticalOf(p.anchor)) {
     case 'Top':
-      y = my;
+      cy = my + hh;
       break;
     case 'Bottom':
-      y = imgH - h - my;
+      cy = imgH - my - hh;
       break;
     default:
-      y = (imgH - h) * 0.5;
+      cy = imgH * 0.5;
   }
 
-  return { x, y, w, h };
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
 }

@@ -1,30 +1,55 @@
 <script lang="ts">
   import AnchorGrid from './AnchorGrid.svelte';
+  import RotationControl from './RotationControl.svelte';
   import Slider from './ui/Slider.svelte';
+  import { maxFitWidthFrac } from '$lib/placement';
   import type { Anchor, Placement } from '$lib/types';
 
   interface Props {
     placement: Placement;
     onchange: (p: Placement) => void;
+    /** Current image dimensions and watermark aspect, for best-fit sizing. */
+    imgW?: number;
+    imgH?: number;
+    wmAspect?: number;
     disabled?: boolean;
   }
 
-  let { placement, onchange, disabled = false }: Props = $props();
+  let { placement, onchange, imgW, imgH, wmAspect = 1, disabled = false }: Props = $props();
 
   function set(patch: Partial<Placement>) {
     onchange({ ...placement, ...patch });
   }
 
+  // Largest width_frac that still fits the (rotated) watermark in the image, so
+  // "Size" reads as a percentage of best fit rather than of raw image width.
+  const maxFit = $derived(maxFitWidthFrac(imgW ?? 0, imgH ?? 0, wmAspect, placement.rot_deg));
+  // The watermark's current fill of that best fit, in 0..1.
+  const fitFrac = $derived(maxFit > 0 ? placement.width_frac / maxFit : 0);
+
+  /** Rotate while preserving the fill ratio, so rotation never overflows. */
+  function setRotation(deg: number) {
+    const keep = Math.min(1, fitFrac);
+    const newMax = maxFitWidthFrac(imgW ?? 0, imgH ?? 0, wmAspect, deg);
+    onchange({ ...placement, rot_deg: deg, width_frac: keep * newMax });
+  }
+
   // v1 exposes a single uniform margin controlling both axes.
   const marginPct = $derived(Math.round(placement.margin_x_frac * 100));
-  const sizePct = $derived(Math.round(placement.width_frac * 100));
+  const sizePct = $derived(Math.min(100, Math.round(fitFrac * 100)));
   const opacityPct = $derived(Math.round(placement.opacity * 100));
 </script>
 
 <div class="space-y-4 text-[13px] text-neutral-300">
-  <div class="space-y-1.5">
-    <span class="text-neutral-400">Position</span>
-    <AnchorGrid value={placement.anchor} {disabled} onchange={(a: Anchor) => set({ anchor: a })} />
+  <div class="flex items-start gap-5">
+    <div class="space-y-1.5">
+      <span class="block text-neutral-400">Position</span>
+      <AnchorGrid value={placement.anchor} {disabled} onchange={(a: Anchor) => set({ anchor: a })} />
+    </div>
+    <div class="space-y-1.5">
+      <span class="block text-neutral-400">Rotation</span>
+      <RotationControl value={placement.rot_deg} {disabled} onchange={setRotation} />
+    </div>
   </div>
 
   <Slider
@@ -37,10 +62,10 @@
 
   <Slider
     label="Size"
-    bind:value={() => sizePct, (v) => set({ width_frac: v / 100 })}
+    bind:value={() => sizePct, (v) => set({ width_frac: (v / 100) * maxFit })}
     min={2}
     max={100}
-    suffix="% of width"
+    suffix="% of fit"
     {disabled}
   />
 

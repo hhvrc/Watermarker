@@ -21,6 +21,9 @@
     <Controls
       placement={placement.current}
       onchange={placement.update}
+      imgW={queue.current?.width}
+      imgH={queue.current?.height}
+      wmAspect={watermark.ref ? watermark.ref.width / watermark.ref.height : 1}
       disabled={!queue.current || !watermark.ref}
     />
     <hr class="border-neutral-800" />
