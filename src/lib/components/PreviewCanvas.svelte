@@ -201,21 +201,23 @@
       return;
     }
     if (mode === 'move') {
-      onchange(
-        dragToPlacement(
-          placement,
-          startBox,
-          p.x - startPointer.x,
-          p.y - startPointer.y,
-          canvas.width,
-          canvas.height,
-        ),
+      const next = dragToPlacement(
+        placement,
+        startBox,
+        p.x - startPointer.x,
+        p.y - startPointer.y,
+        canvas.width,
+        canvas.height,
       );
+      // The new anchor may afford less room (a margin-bearing edge vs a centered
+      // band), so re-clamp width to the new best fit so it can't clip the edge.
+      const maxFit = maxFitWidthFrac(canvas.width, canvas.height, wmAspect, next);
+      onchange({ ...next, width_frac: Math.min(next.width_frac, maxFit) });
     } else {
       const d1 = dist(p.x, p.y, resizeRef.x, resizeRef.y);
       // Cap growth at best fit so the (rotated) watermark can't be dragged past
       // the binding image edge.
-      const maxFit = maxFitWidthFrac(canvas.width, canvas.height, wmAspect, placement.rot_deg);
+      const maxFit = maxFitWidthFrac(canvas.width, canvas.height, wmAspect, placement);
       onchange({
         ...placement,
         width_frac: resizeWidthFrac(startWidthFrac, resizeStartDist, d1, MIN_WIDTH_FRAC, maxFit),

@@ -50,21 +50,34 @@ export interface Rect {
  * reaches first. Lets the Size control mean "% of best fit" (1.0 = touching the
  * binding edge) instead of "% of image width", so a tall or rotated watermark
  * can't be scaled past the top/bottom. Returns 1 when inputs are unknown.
+ *
+ * The watermark grows from its anchored edge toward the opposite edge, so the
+ * margin on the anchored side eats into the space available for the bounding
+ * box: a corner-anchored mark at "100% fit" sits flush against the opposite edge
+ * with exactly its margin on the anchored side, never overflowing. Centered
+ * bands carry no margin and fill the full extent. Mirrors how `resolveRect`
+ * pins the box, so best fit and placement agree.
  */
 export function maxFitWidthFrac(
   imgW: number,
   imgH: number,
   wmAspect: number,
-  rotDeg: number,
+  p: Placement,
 ): number {
   if (!imgW || !imgH || !wmAspect) return 1;
-  const rad = (rotDeg * Math.PI) / 180;
+  const rad = (p.rot_deg * Math.PI) / 180;
   const c = Math.abs(Math.cos(rad));
   const s = Math.abs(Math.sin(rad));
-  // Rotated bbox width/height per unit width_frac, divided out by image size.
-  const fitByWidth = 1 / (c + s / wmAspect);
-  const fitByHeight = imgH / imgW / (s + c / wmAspect);
-  return Math.min(fitByWidth, fitByHeight);
+  // Available span per axis: the full extent for a centered band, otherwise the
+  // extent minus the anchored-side margin (which uses the shorter side, like
+  // `resolveRect`).
+  const mRef = Math.min(imgW, imgH);
+  const availW = horizontalOf(p.anchor) === 'Center' ? imgW : imgW - p.margin_x_frac * mRef;
+  const availH = verticalOf(p.anchor) === 'Middle' ? imgH : imgH - p.margin_y_frac * mRef;
+  // Rotated bbox width/height per unit width_frac, bounded by the available span.
+  const fitByWidth = availW / imgW / (c + s / wmAspect);
+  const fitByHeight = availH / imgW / (s + c / wmAspect);
+  return Math.max(0, Math.min(fitByWidth, fitByHeight));
 }
 
 type H = 'Left' | 'Center' | 'Right';

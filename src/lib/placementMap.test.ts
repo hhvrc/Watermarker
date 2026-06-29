@@ -50,22 +50,50 @@ describe('rotatePoint', () => {
 });
 
 describe('maxFitWidthFrac', () => {
+  // A corner-anchored placement with no margin and the given aspect-driving
+  // rotation, so the older width/height/rotation cases keep their expectations.
+  const noMargin = (rotDeg: number): Placement => ({
+    ...base,
+    margin_x_frac: 0,
+    margin_y_frac: 0,
+    rot_deg: rotDeg,
+  });
+
   it('is bounded by width for a wide watermark on a square image', () => {
     // aspect 2 (wide): width binds first, so best fit is full image width.
-    expect(maxFitWidthFrac(1000, 1000, 2, 0)).toBeCloseTo(1);
+    expect(maxFitWidthFrac(1000, 1000, 2, noMargin(0))).toBeCloseTo(1);
   });
 
   it('is bounded by height for a tall watermark', () => {
     // aspect 0.5 (tall): at width_frac f, height = 2*f*imgW; fills height at f=0.5.
-    expect(maxFitWidthFrac(1000, 1000, 0.5, 0)).toBeCloseTo(0.5);
+    expect(maxFitWidthFrac(1000, 1000, 0.5, noMargin(0))).toBeCloseTo(0.5);
   });
 
   it('accounts for rotation (90° swaps the binding dimension)', () => {
     // A wide mark rotated 90° becomes tall; height now binds at f=1 on a square.
-    expect(maxFitWidthFrac(1000, 1000, 2, 90)).toBeCloseTo(1);
+    expect(maxFitWidthFrac(1000, 1000, 2, noMargin(90))).toBeCloseTo(1);
     // A tall mark (aspect 0.5) rotated 90° becomes wide (bbox width = 2× drawn
     // width), so width binds first at f=0.5.
-    expect(maxFitWidthFrac(1000, 1000, 0.5, 90)).toBeCloseTo(0.5);
+    expect(maxFitWidthFrac(1000, 1000, 0.5, noMargin(90))).toBeCloseTo(0.5);
+  });
+
+  it('subtracts the anchored-side margin so best fit never overflows', () => {
+    // Corner anchor, margin 0.1 (→100px on a 1000² image): the wide mark binds on
+    // width, but only 900px is available, so best fit is 0.9 (not 1).
+    const p: Placement = { ...base, margin_x_frac: 0.1, margin_y_frac: 0.1, rot_deg: 0 };
+    expect(maxFitWidthFrac(1000, 1000, 2, p)).toBeCloseTo(0.9);
+
+    // At that best fit the resolved box sits flush inside the margin on both the
+    // anchored edge and the opposite edge — no overflow.
+    const r = resolveRect({ ...p, width_frac: 0.9 }, 1000, 1000, 2);
+    expect(r.x).toBeCloseTo(0); // opposite (left) edge flush at the image border
+    expect(r.x + r.w).toBeCloseTo(900); // anchored (right) edge keeps its margin
+  });
+
+  it('ignores margin for centered bands', () => {
+    // A Center anchor carries no effective margin, so the full extent is usable.
+    const p: Placement = { ...base, anchor: 'Center', margin_x_frac: 0.1, margin_y_frac: 0.1 };
+    expect(maxFitWidthFrac(1000, 1000, 2, p)).toBeCloseTo(1);
   });
 });
 
