@@ -4,7 +4,7 @@
   import { output } from '$lib/state/output.svelte';
 </script>
 
-<div class="space-y-2 text-[13px] text-neutral-300">
+<div class="select-none space-y-2 text-[13px] text-neutral-300">
   <span class="text-neutral-400">Output</span>
   <div class="flex items-center gap-2">
     <Button size="sm" onclick={output.pickDir}>Choose folder…</Button>
@@ -16,7 +16,7 @@
   <label class="flex items-center gap-2 text-xs text-neutral-400">
     <span class="w-16">Suffix</span>
     <input
-      class="flex-1 rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-100"
+      class="flex-1 select-text rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-100"
       bind:value={output.settings.suffix}
     />
   </label>

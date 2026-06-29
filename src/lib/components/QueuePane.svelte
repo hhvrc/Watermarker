@@ -21,7 +21,7 @@
   }
 </script>
 
-<div class="space-y-2">
+<div class="select-none space-y-2">
   <div class="flex items-center justify-between text-neutral-400">
     <span>Queue ({images.length})</span>
     {#if images.length > 0}

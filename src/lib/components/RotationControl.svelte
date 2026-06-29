@@ -26,7 +26,7 @@
     'hover:border-neutral-500 hover:text-neutral-100 disabled:opacity-40';
 </script>
 
-<div class="flex flex-col items-center gap-1.5">
+<div class="flex select-none flex-col items-center gap-1.5">
   <div class="flex gap-1">
     <button
       type="button"

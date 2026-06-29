@@ -4,7 +4,7 @@
   import { dnd } from '$lib/services/dnd.svelte';
 </script>
 
-<div class="space-y-2 text-[13px]">
+<div class="select-none space-y-2 text-[13px]">
   <div class="flex items-center justify-between">
     <span class="text-neutral-400">Watermark</span>
     {#if watermark.ref}

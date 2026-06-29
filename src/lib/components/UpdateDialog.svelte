@@ -31,7 +31,7 @@
     }}
   >
     <div
-      class="w-full max-w-sm rounded-xl border border-neutral-700 bg-neutral-900 p-5 shadow-2xl"
+      class="w-full max-w-sm select-none rounded-xl border border-neutral-700 bg-neutral-900 p-5 shadow-2xl"
       role="dialog"
       aria-modal="true"
       aria-labelledby="update-title"
@@ -64,7 +64,7 @@
 
         {#if updater.notes}
           <div
-            class="mt-3 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-neutral-800 bg-neutral-950 p-2.5 text-xs text-neutral-400"
+            class="mt-3 max-h-40 select-text overflow-auto whitespace-pre-wrap rounded-lg border border-neutral-800 bg-neutral-950 p-2.5 text-xs text-neutral-400"
           >
             {updater.notes}
           </div>

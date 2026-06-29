@@ -40,7 +40,7 @@
   bind:this={element}
   aria-label={titleText}
   class={[
-    'flex w-full cursor-pointer flex-col items-center justify-center border border-dashed text-center transition-colors',
+    'flex w-full cursor-pointer select-none flex-col items-center justify-center border border-dashed text-center transition-colors',
     sizeClass,
     active
       ? 'border-neutral-300 bg-white/10'

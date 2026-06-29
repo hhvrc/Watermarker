@@ -51,6 +51,6 @@
   {/if}
 
   {#if status.text}
-    <p class="text-xs text-neutral-400">{status.text}</p>
+    <p class="select-none text-xs text-neutral-400">{status.text}</p>
   {/if}
 </aside>

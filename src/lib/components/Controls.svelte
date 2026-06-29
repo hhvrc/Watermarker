@@ -67,11 +67,11 @@
 <div class="space-y-4 text-[13px] text-neutral-300">
   <div class="flex items-start gap-5">
     <div class="space-y-1.5">
-      <span class="block text-neutral-400">Position</span>
+      <span class="block select-none text-neutral-400">Position</span>
       <AnchorGrid value={placement.anchor} {disabled} onchange={setAnchor} />
     </div>
     <div class="space-y-1.5">
-      <span class="block text-neutral-400">Rotation</span>
+      <span class="block select-none text-neutral-400">Rotation</span>
       <RotationControl value={placement.rot_deg} {disabled} onchange={setRotation} />
     </div>
   </div>

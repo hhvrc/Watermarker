@@ -37,7 +37,7 @@
 
 <button
   {type}
-  class="border disabled:opacity-40 {VARIANTS[variant]} {SIZES[size]} {className}"
+  class="border select-none disabled:opacity-40 {VARIANTS[variant]} {SIZES[size]} {className}"
   {...rest}
 >
   {@render children()}

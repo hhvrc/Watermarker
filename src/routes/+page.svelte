@@ -24,7 +24,7 @@
   }
 </script>
 
-<section class="flex min-h-0 flex-col overflow-hidden p-3">
+<section class="flex min-h-0 select-none flex-col overflow-hidden p-3">
   {#if workspace.mode === 'edit'}
     {#if current}
       <div class="mb-2 flex items-center justify-between gap-2 text-xs text-neutral-300">

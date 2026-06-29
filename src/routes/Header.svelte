@@ -10,7 +10,7 @@
 </script>
 
 <header
-  class="flex items-center justify-between gap-3 border-b border-neutral-800 bg-neutral-900/60 px-3 py-2"
+  class="flex select-none items-center justify-between gap-3 border-b border-neutral-800 bg-neutral-900/60 px-3 py-2"
 >
   <div class="flex items-baseline gap-2">
     <h1 class="text-sm font-semibold">Batch Watermarker</h1>

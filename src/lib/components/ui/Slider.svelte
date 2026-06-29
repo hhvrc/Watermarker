@@ -22,6 +22,6 @@
 </script>
 
 <label class="flex flex-col gap-1">
-  <span class="text-neutral-400">{label} ({value}{suffix})</span>
+  <span class="select-none text-neutral-400">{label} ({value}{suffix})</span>
   <input type="range" {min} {max} {step} {disabled} bind:value />
 </label>

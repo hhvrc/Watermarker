@@ -22,7 +22,7 @@
   }
 </script>
 
-<div class="space-y-2 text-[13px] text-neutral-300">
+<div class="select-none space-y-2 text-[13px] text-neutral-300">
   <span class="text-neutral-400">Presets</span>
 
   {#if presets.length === 0}
@@ -58,7 +58,7 @@
 
   <div class="flex items-center gap-1">
     <input
-      class="min-w-0 flex-1 rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-100 placeholder:text-neutral-500 disabled:opacity-40"
+      class="min-w-0 flex-1 select-text rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-100 placeholder:text-neutral-500 disabled:opacity-40"
       placeholder="Preset name…"
       disabled={!canSave}
       bind:value={name}
