@@ -168,9 +168,15 @@
   }
 
   // A minimal margin guide: one very thin dotted line per anchored dimension,
-  // spanning the margin gap from the image's outer edge to the midpoint of the
-  // watermark's anchored edge. No labels. Centered axes carry no margin, so they
-  // draw nothing. Drawn in image space (outside the rotation).
+  // spanning the margin gap from the image's outer edge to the watermark's
+  // anchored edge. No labels. Centered axes carry no margin, so they draw
+  // nothing. Drawn in image space (outside the rotation).
+  //
+  // The gap is always exactly mx/my: `resolveRect` pins the watermark by its
+  // rotated bounding box (half-extents that grow with rotation), so the rotated
+  // box's anchored edge sits at mx/(iw-mx)/my/(ih-my) regardless of angle. Using
+  // the unrotated box edge (r.x + r.w) here would overshoot once rotated, since
+  // that edge lies inside the gap.
   function drawMargin() {
     if (!ctx || !watermark) return;
     const iw = canvas.width;
@@ -189,10 +195,10 @@
     ctx.lineWidth = Math.max(0.5, iw / 1500);
     ctx.setLineDash([4, 5]);
     if (h !== 'Center' && mx > 1) {
-      line(h === 'Right' ? iw : 0, wmCy, h === 'Right' ? r.x + r.w : r.x, wmCy);
+      line(h === 'Right' ? iw : 0, wmCy, h === 'Right' ? iw - mx : mx, wmCy);
     }
     if (v !== 'Middle' && my > 1) {
-      line(wmCx, v === 'Bottom' ? ih : 0, wmCx, v === 'Bottom' ? r.y + r.h : r.y);
+      line(wmCx, v === 'Bottom' ? ih : 0, wmCx, v === 'Bottom' ? ih - my : my);
     }
     ctx.restore();
   }

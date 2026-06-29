@@ -150,20 +150,40 @@ export function rotatePoint(
  * anchor. A corner anchor frees a single corner (the opposite one); an
  * edge-centre anchor frees the two corners on its outward side; a dead-centre
  * anchor frees all four.
+ *
+ * Returned in the box's *local* (unrotated) coordinates, so the caller can draw
+ * them under the same rotation as the box and hit-test in the local frame.
+ *
+ * Selection is rotation-aware: the watermark is pinned by its rotated bounding
+ * box, so *which* visual corner sits opposite the pinned image corner changes
+ * with the angle. We score each corner by the projection of its rotated position
+ * along the anchor direction — the anchored corner(s) score highest, the free
+ * corner(s) lowest — and free the lowest `2^(centered axes)` corners. At
+ * rot_deg 0 this reproduces the plain "not on an anchored edge" set.
  */
 export function resizeHandles(p: Placement, r: Rect): { x: number; y: number }[] {
   const h = horizontalOf(p.anchor);
   const v = verticalOf(p.anchor);
-  const out: { x: number; y: number }[] = [];
-  for (const left of [true, false]) {
-    for (const top of [true, false]) {
-      const onAnchoredX = (h === 'Left' && left) || (h === 'Right' && !left);
-      const onAnchoredY = (v === 'Top' && top) || (v === 'Bottom' && !top);
-      if (onAnchoredX || onAnchoredY) continue;
-      out.push({ x: left ? r.x : r.x + r.w, y: top ? r.y : r.y + r.h });
-    }
-  }
-  return out;
+  const local = corners(r);
+  // Anchor direction: +1 toward the anchored edge, 0 for a centered axis.
+  const sx = h === 'Right' ? 1 : h === 'Left' ? -1 : 0;
+  const sy = v === 'Bottom' ? 1 : v === 'Top' ? -1 : 0;
+  // A centered axis frees both of its corners, doubling the count: 1 / 2 / 4.
+  const want = 1 << ((sx === 0 ? 1 : 0) + (sy === 0 ? 1 : 0));
+  if (want === 4) return local;
+
+  const cx = r.x + r.w / 2;
+  const cy = r.y + r.h / 2;
+  return local
+    .map((c) => {
+      // Project the corner's rotated (image-space) position along the anchor
+      // direction; the pinned corner scores highest.
+      const rp = rotatePoint(c.x, c.y, cx, cy, p.rot_deg);
+      return { c, key: sx * rp.x + sy * rp.y };
+    })
+    .sort((a, b) => a.key - b.key)
+    .slice(0, want)
+    .map((k) => k.c);
 }
 
 /** The four corner points of a rect. */

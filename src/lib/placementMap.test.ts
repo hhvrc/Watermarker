@@ -8,6 +8,7 @@ import {
   nearCorner,
   resizeWidthFrac,
   rotatePoint,
+  resizeHandles,
   anchorPoint,
 } from './placementMap';
 import type { Placement } from './types';
@@ -198,6 +199,48 @@ describe('resize', () => {
     expect(nearCorner(102, 98, r, 8)).toBe(true); // near top-left
     expect(nearCorner(140, 120, r, 8)).toBe(true); // near bottom-right
     expect(nearCorner(120, 110, r, 8)).toBe(false); // center, not a corner
+  });
+
+  it('frees the single corner opposite a corner anchor (unrotated)', () => {
+    const r = { x: 100, y: 100, w: 40, h: 20 };
+    // BottomRight is anchored, so the top-left corner is the only free handle.
+    const hs = resizeHandles({ ...base, anchor: 'BottomRight' }, r);
+    expect(hs).toEqual([{ x: 100, y: 100 }]);
+  });
+
+  it('frees both outward corners for an edge-centre anchor (unrotated)', () => {
+    const r = { x: 100, y: 100, w: 40, h: 20 };
+    // BottomCenter anchors the bottom edge, freeing the two top corners.
+    const hs = resizeHandles({ ...base, anchor: 'BottomCenter' }, r);
+    expect(hs).toContainEqual({ x: 100, y: 100 }); // top-left
+    expect(hs).toContainEqual({ x: 140, y: 100 }); // top-right
+    expect(hs).toHaveLength(2);
+  });
+
+  it('frees all four corners for a dead-centre anchor', () => {
+    const r = { x: 100, y: 100, w: 40, h: 20 };
+    expect(resizeHandles({ ...base, anchor: 'Center' }, r)).toHaveLength(4);
+  });
+
+  it('tracks rotation: the free corner follows the pinned bbox corner', () => {
+    // Square box centred at (50,50). BottomRight pins the bbox corner farthest
+    // toward +x,+y; the free handle is the corner whose rotated position sits
+    // farthest toward -x,-y. At 90° the local top-left corner is no longer that
+    // corner, so the selection must change to keep the handle visually opposite.
+    const r = { x: 0, y: 0, w: 100, h: 100 };
+    const free = resizeHandles({ ...base, anchor: 'BottomRight', rot_deg: 90 }, r)[0];
+    // Of the four local corners, the one whose rotated (about centre) image-space
+    // position minimises x+y is the correct free handle.
+    const cornersList = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 0, y: 100 },
+      { x: 100, y: 100 },
+    ];
+    const expected = cornersList
+      .map((c) => ({ c, rp: rotatePoint(c.x, c.y, 50, 50, 90) }))
+      .sort((a, b) => a.rp.x + a.rp.y - (b.rp.x + b.rp.y))[0].c;
+    expect(free).toEqual(expected);
   });
 
   it('resizeWidthFrac scales by the distance ratio and clamps', () => {
