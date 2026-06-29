@@ -144,6 +144,28 @@ export function rotatePoint(
   return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
 }
 
+/**
+ * The resize-handle corners: every corner that does *not* lie on an anchored
+ * edge, since those are the corners that move as the watermark grows from its
+ * anchor. A corner anchor frees a single corner (the opposite one); an
+ * edge-centre anchor frees the two corners on its outward side; a dead-centre
+ * anchor frees all four.
+ */
+export function resizeHandles(p: Placement, r: Rect): { x: number; y: number }[] {
+  const h = horizontalOf(p.anchor);
+  const v = verticalOf(p.anchor);
+  const out: { x: number; y: number }[] = [];
+  for (const left of [true, false]) {
+    for (const top of [true, false]) {
+      const onAnchoredX = (h === 'Left' && left) || (h === 'Right' && !left);
+      const onAnchoredY = (v === 'Top' && top) || (v === 'Bottom' && !top);
+      if (onAnchoredX || onAnchoredY) continue;
+      out.push({ x: left ? r.x : r.x + r.w, y: top ? r.y : r.y + r.h });
+    }
+  }
+  return out;
+}
+
 /** The four corner points of a rect. */
 export function corners(r: Rect): { x: number; y: number }[] {
   return [

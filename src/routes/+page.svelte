@@ -12,6 +12,11 @@
   // Local alias so the {#if current} block narrows away the null case.
   const current = $derived(queue.current);
 
+  // Toggle the on-image editing overlay (selection box, resize handles, margin
+  // guides) so the watermark can be previewed clean. Persists across image
+  // switches since this page isn't remounted.
+  let showGuides = $state(true);
+
   // Freeze the current image's placement before moving, so an image still
   // inheriting the sticky default doesn't drift when a later image is edited.
   function prev() {
@@ -32,6 +37,19 @@
           Image {queue.index + 1} / {queue.images.length}: {current.name}
         </span>
         <div class="flex items-center gap-1.5">
+          <Button
+            onclick={() => (showGuides = !showGuides)}
+            aria-pressed={showGuides}
+            title="Show or hide the editing overlay: selection box, resize handles, and margin guides"
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <span
+                class="h-1.5 w-1.5 rounded-full {showGuides ? 'bg-sky-400' : 'bg-neutral-600'}"
+              ></span>
+              Guides
+            </span>
+          </Button>
+          <div class="mx-1 h-4 w-px bg-neutral-700"></div>
           <Button onclick={prev} disabled={queue.index <= 0}>← Prev</Button>
           <Button onclick={next} disabled={queue.index >= queue.images.length - 1}>Next →</Button>
         </div>
@@ -43,6 +61,7 @@
             watermark={watermark.ref}
             placement={placement.current}
             onchange={placement.update}
+            {showGuides}
           />
         {/key}
       </div>

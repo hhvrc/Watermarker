@@ -60,6 +60,9 @@
 
   // v1 exposes a single uniform margin controlling both axes.
   const marginPct = $derived(Math.round(placement.margin_x_frac * 100));
+  // A dead-centre anchor has no anchored edge for the margin to act on, so the
+  // margin does nothing there — disable the slider to make that clear.
+  const marginDisabled = $derived(disabled || placement.anchor === 'Center');
   const sizePct = $derived(Math.min(100, Math.round(fitFrac * 100)));
   const opacityPct = $derived(Math.round(placement.opacity * 100));
 </script>
@@ -81,7 +84,7 @@
     bind:value={() => marginPct, (v) => setMargin(v / 100)}
     min={0}
     max={25}
-    {disabled}
+    disabled={marginDisabled}
   />
 
   <Slider

@@ -6,8 +6,9 @@
     canvasPointToImage,
     pointInRect,
     dragToPlacement,
-    corners,
-    nearCorner,
+    resizeHandles,
+    horizontalOf,
+    verticalOf,
     dist,
     resizeWidthFrac,
     rotatePoint,
@@ -20,9 +21,11 @@
     watermark: WatermarkRef | null;
     placement: Placement;
     onchange: (p: Placement) => void;
+    /** Show the selection box, resize handles, and margin guides. */
+    showGuides?: boolean;
   }
 
-  let { image, watermark, placement, onchange }: Props = $props();
+  let { image, watermark, placement, onchange, showGuides = true }: Props = $props();
 
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
@@ -36,10 +39,13 @@
   let startPointer = { x: 0, y: 0 };
   let startWidthFrac = 0;
   // Fixed reference for a resize drag: the placement's anchor point. Scaling is
-  // always measured relative to the anchor (the image center for centered
-  // anchors), so it grows monotonically from there.
+  // measured relative to the anchor (the image center for centered anchors).
   let resizeRef = { x: 0, y: 0 };
   let resizeStartDist = 0;
+  // Unit vector from the anchor toward the grabbed handle at drag start. The
+  // pointer is *projected* onto this axis (a signed distance), so dragging past
+  // the anchor keeps shrinking toward the minimum instead of growing again.
+  let resizeDir = { x: 0, y: 0 };
 
   const wmAspect = $derived(watermark ? watermark.width / watermark.height : 1);
 
@@ -94,11 +100,13 @@
     };
   });
 
-  // Redraw whenever placement (slider or drag), base, or watermark changes.
+  // Redraw whenever placement (slider or drag), base, watermark, or the guide
+  // toggle changes.
   $effect(() => {
     void placement;
     void baseImg;
     void wmImg;
+    void showGuides;
     draw();
   });
 
@@ -114,7 +122,10 @@
     if (!baseImg) return;
     ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
     drawWatermark();
-    drawSelection();
+    if (showGuides) {
+      drawMargin();
+      drawSelection();
+    }
   }
 
   function drawWatermark() {
@@ -140,18 +151,58 @@
     ctx.translate(-(r.x + r.w / 2), -(r.y + r.h / 2));
 
     ctx.strokeStyle = accent;
-    ctx.lineWidth = Math.max(1, canvas.width / 600);
+    ctx.lineWidth = Math.max(0.5, canvas.width / 1500);
     ctx.setLineDash([8, 5]);
     ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-    // Corner resize handles.
+    // Resize handles on the corners that actually move: the ones not pinned to an
+    // anchored edge (one for a corner anchor, two for an edge-centre, four for
+    // dead-centre).
     ctx.setLineDash([]);
     const s = handleRadius();
     ctx.fillStyle = accent;
-    for (const c of corners(r)) {
-      ctx.fillRect(c.x - s / 2, c.y - s / 2, s, s);
+    for (const hd of resizeHandles(placement, r)) {
+      ctx.fillRect(hd.x - s / 2, hd.y - s / 2, s, s);
     }
     ctx.restore();
+  }
+
+  // A minimal margin guide: one very thin dotted line per anchored dimension,
+  // spanning the margin gap from the image's outer edge to the midpoint of the
+  // watermark's anchored edge. No labels. Centered axes carry no margin, so they
+  // draw nothing. Drawn in image space (outside the rotation).
+  function drawMargin() {
+    if (!ctx || !watermark) return;
+    const iw = canvas.width;
+    const ih = canvas.height;
+    const mRef = Math.min(iw, ih);
+    const mx = placement.margin_x_frac * mRef;
+    const my = placement.margin_y_frac * mRef;
+    const h = horizontalOf(placement.anchor);
+    const v = verticalOf(placement.anchor);
+    const r = resolveRect(placement, iw, ih, wmAspect);
+    const wmCx = r.x + r.w / 2;
+    const wmCy = r.y + r.h / 2;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(125,211,252,0.9)';
+    ctx.lineWidth = Math.max(0.5, iw / 1500);
+    ctx.setLineDash([4, 5]);
+    if (h !== 'Center' && mx > 1) {
+      line(h === 'Right' ? iw : 0, wmCy, h === 'Right' ? r.x + r.w : r.x, wmCy);
+    }
+    if (v !== 'Middle' && my > 1) {
+      line(wmCx, v === 'Bottom' ? ih : 0, wmCx, v === 'Bottom' ? r.y + r.h : r.y);
+    }
+    ctx.restore();
+  }
+
+  function line(x0: number, y0: number, x1: number, y1: number) {
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
   }
 
   // Map an image-space pointer into the watermark's local (unrotated) frame so
@@ -166,17 +217,32 @@
     return canvasPointToImage(e.clientX, e.clientY, rect, canvas.width, canvas.height);
   }
 
+  // The resize handle under a local-frame pointer, or null. With several handles
+  // (edge-centre / centre anchors) the nearest within grab range wins.
+  function handleAt(lp: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }) {
+    const radius = handleRadius();
+    return (
+      resizeHandles(placement, r).find((hd) => dist(lp.x, lp.y, hd.x, hd.y) <= radius) ?? null
+    );
+  }
+
   function onPointerDown(e: PointerEvent) {
     if (!watermark) return;
     const p = toImage(e);
     const r = resolveRect(placement, canvas.width, canvas.height, wmAspect);
     const lp = toLocal(p, r);
 
-    if (nearCorner(lp.x, lp.y, r, handleRadius())) {
+    if (handleAt(lp, r)) {
       mode = 'resize';
       startWidthFrac = placement.width_frac;
       resizeRef = anchorPoint(placement, canvas.width, canvas.height);
-      resizeStartDist = dist(p.x, p.y, resizeRef.x, resizeRef.y);
+      const dx = p.x - resizeRef.x;
+      const dy = p.y - resizeRef.y;
+      resizeStartDist = Math.hypot(dx, dy);
+      resizeDir =
+        resizeStartDist > 0
+          ? { x: dx / resizeStartDist, y: dy / resizeStartDist }
+          : { x: 0, y: 0 };
     } else if (pointInRect(lp.x, lp.y, r)) {
       mode = 'move';
       startBox = r;
@@ -193,11 +259,15 @@
       if (!watermark) return;
       const r = resolveRect(placement, canvas.width, canvas.height, wmAspect);
       const lp = toLocal(p, r);
-      canvas.style.cursor = nearCorner(lp.x, lp.y, r, handleRadius())
-        ? 'nwse-resize'
-        : pointInRect(lp.x, lp.y, r)
-          ? 'move'
-          : 'default';
+      const hovered = handleAt(lp, r);
+      if (hovered) {
+        // A handle sits on a corner; its diagonal cursor depends on which one.
+        const isLeft = hovered.x < r.x + r.w / 2;
+        const isTop = hovered.y < r.y + r.h / 2;
+        canvas.style.cursor = isLeft === isTop ? 'nwse-resize' : 'nesw-resize';
+      } else {
+        canvas.style.cursor = pointInRect(lp.x, lp.y, r) ? 'move' : 'default';
+      }
       return;
     }
     if (mode === 'move') {
@@ -214,7 +284,10 @@
       const maxFit = maxFitWidthFrac(canvas.width, canvas.height, wmAspect, next);
       onchange({ ...next, width_frac: Math.min(next.width_frac, maxFit) });
     } else {
-      const d1 = dist(p.x, p.y, resizeRef.x, resizeRef.y);
+      // Signed distance along the drag axis: projecting onto resizeDir means
+      // crossing the anchor flips the sign and clamps to the minimum, rather than
+      // the watermark growing again on the far side.
+      const d1 = (p.x - resizeRef.x) * resizeDir.x + (p.y - resizeRef.y) * resizeDir.y;
       // Cap growth at best fit so the (rotated) watermark can't be dragged past
       // the binding image edge.
       const maxFit = maxFitWidthFrac(canvas.width, canvas.height, wmAspect, placement);
