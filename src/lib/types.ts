@@ -27,12 +27,25 @@ export interface Placement {
   opacity: number;
 }
 
+/** Key VRChat capture fields parsed from a screenshot (mirror of Rust `VrcMetadata`). */
+export interface VrcMetadata {
+  world_name: string | null;
+  /** Photographer (the local player who took the shot). */
+  author_name: string | null;
+  /** Capture timestamp, display-ready (`YYYY-MM-DD HH:MM:SS`). */
+  captured_at: string | null;
+  /** Embedded format the data came from: `"line"`, `"json"`, or `"xmp"`. */
+  source_format: string;
+}
+
 /** Metadata returned by `import_images`. */
 export interface ImageMeta {
   id: string;
   name: string;
   width: number;
   height: number;
+  /** Parsed VRChat metadata, present only for VRChat screenshots. */
+  vrchat: VrcMetadata | null;
 }
 
 /** Metadata returned by `set_watermark`. */
@@ -68,6 +81,8 @@ export interface ImageRef {
   previewUrl: string | null;
   status: ImageStatus;
   error?: string;
+  /** Parsed VRChat metadata, present only for VRChat screenshots. */
+  vrchat: VrcMetadata | null;
 }
 
 export interface WatermarkRef {

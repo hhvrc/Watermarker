@@ -20,6 +20,7 @@ use crate::placement::Placement;
 use crate::preview;
 use crate::settings::{self, Settings};
 use crate::state::{AppState, ImageEntry, ImageSource, WatermarkData, WatermarkEntry};
+use crate::vrchat::{self, VrcMetadata};
 use crate::watermark::WatermarkSource;
 
 /// Metadata for an imported source image.
@@ -29,6 +30,8 @@ pub struct ImageMeta {
     pub name: String,
     pub width: u32,
     pub height: u32,
+    /// Parsed VRChat capture metadata, when the source is a VRChat screenshot.
+    pub vrchat: Option<VrcMetadata>,
 }
 
 /// Metadata for the current watermark.
@@ -59,6 +62,7 @@ fn register_image(
     source: ImageSource,
     name: String,
     img: image::RgbaImage,
+    vrchat: Option<VrcMetadata>,
 ) -> Result<ImageMeta, String> {
     let (w, h) = img.dimensions();
     let display = preview::downscale_for_display(&img);
@@ -79,6 +83,7 @@ fn register_image(
         name,
         width: w,
         height: h,
+        vrchat,
     })
 }
 
@@ -98,7 +103,22 @@ pub fn import_images(state: State<AppState>, paths: Vec<String>) -> Result<Vec<I
             .and_then(|s| s.to_str())
             .unwrap_or_default()
             .to_string();
-        out.push(register_image(&state, ImageSource::Path(pb), name, img)?);
+        // VRChat metadata lives in PNG text chunks; read the raw bytes once to
+        // parse it (the pixels were decoded separately above).
+        let vrc = if ext_of(&name) == "png" {
+            std::fs::read(&pb)
+                .ok()
+                .and_then(|b| vrchat::parse_png(&b, &name))
+        } else {
+            None
+        };
+        out.push(register_image(
+            &state,
+            ImageSource::Path(pb),
+            name,
+            img,
+            vrc,
+        )?);
     }
     Ok(out)
 }
@@ -151,7 +171,12 @@ pub fn import_image_bytes(
 ) -> Result<ImageMeta, String> {
     let (bytes, name) = read_raw(&request, "image.png")?;
     let img = decode::load_rgba_from_bytes(&bytes).map_err(|e| e.to_string())?;
-    register_image(&state, ImageSource::Bytes(Arc::new(bytes)), name, img)
+    let vrc = if ext_of(&name) == "png" {
+        vrchat::parse_png(&bytes, &name)
+    } else {
+        None
+    };
+    register_image(&state, ImageSource::Bytes(Arc::new(bytes)), name, img, vrc)
 }
 
 /// Remove an image from the registry and free its cached preview.

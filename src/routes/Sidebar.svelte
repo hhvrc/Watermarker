@@ -2,6 +2,7 @@
   import Controls from '$lib/components/Controls.svelte';
   import Presets from '$lib/components/Presets.svelte';
   import QueuePane from '$lib/components/QueuePane.svelte';
+  import VrcMetadataPanel from '$lib/components/VrcMetadataPanel.svelte';
   import WatermarkPanel from '$lib/components/WatermarkPanel.svelte';
   import OutputPanel from '$lib/components/OutputPanel.svelte';
   import { queue } from '$lib/state/queue.svelte';
@@ -44,6 +45,11 @@
     onremove={queue.removeAt}
     onclear={workspace.clearQueue}
   />
+
+  {#if queue.current?.vrchat}
+    <hr class="border-neutral-800" />
+    <VrcMetadataPanel meta={queue.current.vrchat} />
+  {/if}
 
   {#if workspace.mode === 'review'}
     <hr class="border-neutral-800" />

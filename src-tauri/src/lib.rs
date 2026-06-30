@@ -7,6 +7,7 @@ mod placement;
 mod preview;
 mod settings;
 mod state;
+mod vrchat;
 mod watermark;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
