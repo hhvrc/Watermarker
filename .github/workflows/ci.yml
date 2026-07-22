@@ -13,6 +13,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   # ---------------------------------------------------------------------------
   # Frontend: type-check (svelte-check) and unit tests (vitest).
