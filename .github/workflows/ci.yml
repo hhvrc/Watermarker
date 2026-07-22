@@ -7,6 +7,9 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  contents: read
+
 # Cancel an in-progress run when a newer commit is pushed to the same
 # branch/PR so we don't waste runners on superseded work.
 concurrency:
