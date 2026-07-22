@@ -19,7 +19,7 @@ updates:
 
   # Check for Rust package updates
   - package-ecosystem: cargo
-    directory: /
+    directory: /src-tauri/
     schedule:
       interval: weekly
       day: monday
