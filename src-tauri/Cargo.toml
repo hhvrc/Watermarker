@@ -33,9 +33,9 @@ tauri-plugin-updater = "2"
 
 # Image engine
 image = "0.25"
-resvg = "0.44"
+resvg = "0.47"
 thiserror = "2"
-img-parts = "0.3"
+img-parts = "0.4"
 bytes = "1"
 rayon = "1"
 urlencoding = "2"
