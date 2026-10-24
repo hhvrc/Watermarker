@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from './ui/Button.svelte';
   import Badge from './ui/Badge.svelte';
-  import type { ImageRef } from '$lib/types';
+  import type { ImageRef } from '#lib/types.js';
 
   interface Props {
     images: ImageRef[];

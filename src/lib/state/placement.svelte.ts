@@ -1,8 +1,8 @@
 // Watermark placement: the per-image placement plus the sticky default carried
 // forward to the next image the user touches.
 
-import { DEFAULT_PLACEMENT } from '$lib/placement';
-import type { ImageRef, Placement } from '$lib/types';
+import { DEFAULT_PLACEMENT } from '#lib/placement.js';
+import type { ImageRef, Placement } from '#lib/types.js';
 import { queue } from './queue.svelte';
 
 class PlacementStore {

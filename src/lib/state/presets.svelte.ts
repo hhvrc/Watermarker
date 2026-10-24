@@ -1,6 +1,6 @@
 // Saved presets: named bundles of watermark + placement, applied as a unit.
 
-import type { Preset } from '$lib/types';
+import type { Preset } from '#lib/types.js';
 import { status } from './status.svelte';
 import { watermark } from './watermark.svelte';
 import { placement } from './placement.svelte';

@@ -1,16 +1,16 @@
 <script lang="ts">
-  import Controls from '$lib/components/Controls.svelte';
-  import Presets from '$lib/components/Presets.svelte';
-  import QueuePane from '$lib/components/QueuePane.svelte';
-  import VrcMetadataPanel from '$lib/components/VrcMetadataPanel.svelte';
-  import WatermarkPanel from '$lib/components/WatermarkPanel.svelte';
-  import OutputPanel from '$lib/components/OutputPanel.svelte';
-  import { queue } from '$lib/state/queue.svelte';
-  import { watermark } from '$lib/state/watermark.svelte';
-  import { placement } from '$lib/state/placement.svelte';
-  import { presets } from '$lib/state/presets.svelte';
-  import { workspace } from '$lib/state/workspace.svelte';
-  import { status } from '$lib/state/status.svelte';
+  import Controls from '#lib/components/Controls.svelte';
+  import Presets from '#lib/components/Presets.svelte';
+  import QueuePane from '#lib/components/QueuePane.svelte';
+  import VrcMetadataPanel from '#lib/components/VrcMetadataPanel.svelte';
+  import WatermarkPanel from '#lib/components/WatermarkPanel.svelte';
+  import OutputPanel from '#lib/components/OutputPanel.svelte';
+  import { queue } from '#lib/state/queue.svelte.js';
+  import { watermark } from '#lib/state/watermark.svelte.js';
+  import { placement } from '#lib/state/placement.svelte.js';
+  import { presets } from '#lib/state/presets.svelte.js';
+  import { workspace } from '#lib/state/workspace.svelte.js';
+  import { status } from '#lib/state/status.svelte.js';
 </script>
 
 <aside class="min-h-0 space-y-5 overflow-auto border-r border-neutral-800 bg-neutral-900 p-3">

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from './ui/Button.svelte';
   import Checkbox from './ui/Checkbox.svelte';
-  import { output } from '$lib/state/output.svelte';
+  import { output } from '#lib/state/output.svelte.js';
 </script>
 
 <div class="select-none space-y-2 text-[13px] text-neutral-300">

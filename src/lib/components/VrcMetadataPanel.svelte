@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { VrcMetadata } from '$lib/types';
+  import type { VrcMetadata } from '#lib/types.js';
 
   interface Props {
     meta: VrcMetadata;

@@ -2,8 +2,8 @@
 // and the batch export run.
 
 import { listen } from '@tauri-apps/api/event';
-import { renderExactPreviewUrl, processBatch } from '$lib/ipc';
-import type { ProgressEvent } from '$lib/types';
+import { renderExactPreviewUrl, processBatch } from '#lib/ipc.js';
+import type { ProgressEvent } from '#lib/types.js';
 import { queue } from './queue.svelte';
 import { placement } from './placement.svelte';
 import { watermark } from './watermark.svelte';

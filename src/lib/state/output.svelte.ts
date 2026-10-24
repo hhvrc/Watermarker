@@ -1,7 +1,7 @@
 // Output/export settings: destination folder, naming, and per-export toggles.
 
 import { open } from '@tauri-apps/plugin-dialog';
-import type { OutputSettings } from '$lib/types';
+import type { OutputSettings } from '#lib/types.js';
 
 class OutputStore {
   settings = $state<OutputSettings>({

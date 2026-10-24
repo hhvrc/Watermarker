@@ -1,6 +1,6 @@
 <script lang="ts">
   import Button from './ui/Button.svelte';
-  import type { Preset } from '$lib/types';
+  import type { Preset } from '#lib/types.js';
 
   interface Props {
     presets: Preset[];

@@ -2,8 +2,8 @@
   import AnchorGrid from './AnchorGrid.svelte';
   import RotationControl from './RotationControl.svelte';
   import Slider from './ui/Slider.svelte';
-  import { maxFitWidthFrac } from '$lib/placement';
-  import type { Anchor, Placement } from '$lib/types';
+  import { maxFitWidthFrac } from '#lib/placement.js';
+  import type { Anchor, Placement } from '#lib/types.js';
 
   interface Props {
     placement: Placement;

@@ -1,13 +1,13 @@
 <script lang="ts">
-  import PreviewCanvas from '$lib/components/PreviewCanvas.svelte';
-  import ReviewGrid from '$lib/components/ReviewGrid.svelte';
-  import DropZone from '$lib/components/DropZone.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
-  import { queue } from '$lib/state/queue.svelte';
-  import { watermark } from '$lib/state/watermark.svelte';
-  import { placement } from '$lib/state/placement.svelte';
-  import { workspace } from '$lib/state/workspace.svelte';
-  import { dnd } from '$lib/services/dnd.svelte';
+  import PreviewCanvas from '#lib/components/PreviewCanvas.svelte';
+  import ReviewGrid from '#lib/components/ReviewGrid.svelte';
+  import DropZone from '#lib/components/DropZone.svelte';
+  import Button from '#lib/components/ui/Button.svelte';
+  import { queue } from '#lib/state/queue.svelte.js';
+  import { watermark } from '#lib/state/watermark.svelte.js';
+  import { placement } from '#lib/state/placement.svelte.js';
+  import { workspace } from '#lib/state/workspace.svelte.js';
+  import { dnd } from '#lib/services/dnd.svelte.js';
 
   // Local alias so the {#if current} block narrows away the null case.
   const current = $derived(queue.current);

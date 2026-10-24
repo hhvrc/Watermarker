@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ANCHORS, ANCHOR_LABELS } from '$lib/placement';
-  import type { Anchor } from '$lib/types';
+  import { ANCHORS, ANCHOR_LABELS } from '#lib/placement.js';
+  import type { Anchor } from '#lib/types.js';
 
   interface Props {
     value: Anchor;

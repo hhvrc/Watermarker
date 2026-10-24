@@ -1,9 +1,9 @@
 // The current watermark and its managed (durable) file path.
 
 import { open } from '@tauri-apps/plugin-dialog';
-import { setWatermark, setWatermarkPersisted, getWatermarkPreviewUrl } from '$lib/ipc';
-import type { WatermarkRef, WatermarkMeta } from '$lib/types';
-import { WATERMARK_EXTS } from '$lib/dnd';
+import { setWatermark, setWatermarkPersisted, getWatermarkPreviewUrl } from '#lib/ipc.js';
+import type { WatermarkRef, WatermarkMeta } from '#lib/types.js';
+import { WATERMARK_EXTS } from '#lib/dnd.js';
 import { status } from './status.svelte';
 
 class WatermarkStore {

@@ -2,10 +2,10 @@
 // watermark zone or the image queue based on where (and what) it is.
 
 import { getCurrentWebview } from '@tauri-apps/api/webview';
-import { isWatermarkPath, physPointInEl } from '$lib/dnd';
-import { watermark } from '$lib/state/watermark.svelte';
-import { queue } from '$lib/state/queue.svelte';
-import { workspace } from '$lib/state/workspace.svelte';
+import { isWatermarkPath, physPointInEl } from '#lib/dnd.js';
+import { watermark } from '#lib/state/watermark.svelte.js';
+import { queue } from '#lib/state/queue.svelte.js';
+import { workspace } from '#lib/state/workspace.svelte.js';
 
 class DndController {
   dragOver = $state(false);

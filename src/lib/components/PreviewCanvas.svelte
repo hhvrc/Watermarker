@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { ImageRef, Placement, WatermarkRef } from '$lib/types';
-  import { resolveRect, maxFitWidthFrac } from '$lib/placement';
+  import type { ImageRef, Placement, WatermarkRef } from '#lib/types.js';
+  import { resolveRect, maxFitWidthFrac } from '#lib/placement.js';
   import {
     canvasPointToImage,
     pointInRect,
@@ -14,7 +14,7 @@
     rotatePoint,
     anchorPoint,
     MIN_WIDTH_FRAC,
-  } from '$lib/placementMap';
+  } from '#lib/placementMap.js';
 
   interface Props {
     image: ImageRef;

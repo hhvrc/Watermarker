@@ -3,11 +3,11 @@
   import { onMount, onDestroy, type Snippet } from 'svelte';
   import Header from './Header.svelte';
   import Sidebar from './Sidebar.svelte';
-  import DropOverlay from '$lib/components/DropOverlay.svelte';
-  import UpdateDialog from '$lib/components/UpdateDialog.svelte';
-  import { dnd } from '$lib/services/dnd.svelte';
-  import { persistence } from '$lib/state/persistence.svelte';
-  import { updater } from '$lib/state/updater.svelte';
+  import DropOverlay from '#lib/components/DropOverlay.svelte';
+  import UpdateDialog from '#lib/components/UpdateDialog.svelte';
+  import { dnd } from '#lib/services/dnd.svelte.js';
+  import { persistence } from '#lib/state/persistence.svelte.js';
+  import { updater } from '#lib/state/updater.svelte.js';
 
   interface Props {
     children: Snippet;

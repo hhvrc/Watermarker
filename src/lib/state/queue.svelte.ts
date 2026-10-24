@@ -1,9 +1,9 @@
 // The image queue: the imported images and which one is selected.
 
 import { open } from '@tauri-apps/plugin-dialog';
-import { importImages, removeImage, getImagePreviewUrl } from '$lib/ipc';
-import type { ImageMeta, ImageRef } from '$lib/types';
-import { IMAGE_EXTS } from '$lib/dnd';
+import { importImages, removeImage, getImagePreviewUrl } from '#lib/ipc.js';
+import type { ImageMeta, ImageRef } from '#lib/types.js';
+import { IMAGE_EXTS } from '#lib/dnd.js';
 import { status } from './status.svelte';
 
 class QueueStore {

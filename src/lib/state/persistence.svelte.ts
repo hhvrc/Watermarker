@@ -2,7 +2,7 @@
 // persisted field changes. Owns all reading/writing of the Rust settings store so
 // the domain stores stay unaware of persistence.
 
-import { getSettings, setSettings, type AppSettings } from '$lib/ipc';
+import { getSettings, setSettings, type AppSettings } from '#lib/ipc.js';
 import { watermark } from './watermark.svelte';
 import { placement } from './placement.svelte';
 import { presets } from './presets.svelte';

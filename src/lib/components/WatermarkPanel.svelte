@@ -1,7 +1,7 @@
 <script lang="ts">
-  import DropZone from '$lib/components/DropZone.svelte';
-  import { watermark } from '$lib/state/watermark.svelte';
-  import { dnd } from '$lib/services/dnd.svelte';
+  import DropZone from '#lib/components/DropZone.svelte';
+  import { watermark } from '#lib/state/watermark.svelte.js';
+  import { dnd } from '#lib/services/dnd.svelte.js';
 </script>
 
 <div class="select-none space-y-2 text-[13px]">

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { getVersion } from '@tauri-apps/api/app';
-  import Button from '$lib/components/ui/Button.svelte';
-  import { queue } from '$lib/state/queue.svelte';
-  import { workspace } from '$lib/state/workspace.svelte';
-  import { status } from '$lib/state/status.svelte';
+  import Button from '#lib/components/ui/Button.svelte';
+  import { queue } from '#lib/state/queue.svelte.js';
+  import { workspace } from '#lib/state/workspace.svelte.js';
+  import { status } from '#lib/state/status.svelte.js';
 
   let version = $state('');
   void getVersion().then((v) => (version = v));

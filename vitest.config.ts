@@ -6,9 +6,4 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
   },
-  // Bypass the project tsconfig (it `extends` the SvelteKit-generated tsconfig,
-  // which may not exist yet) so esbuild can transform the pure-TS tests standalone.
-  esbuild: {
-    tsconfigRaw: '{}',
-  },
 });

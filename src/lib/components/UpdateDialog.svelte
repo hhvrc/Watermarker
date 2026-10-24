@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/components/ui/Button.svelte';
-  import { updater } from '$lib/state/updater.svelte';
+  import Button from '#lib/components/ui/Button.svelte';
+  import { updater } from '#lib/state/updater.svelte.js';
 
   // Whether the "No thanks" decline options (skip / never) are revealed.
   let declining = $state(false);

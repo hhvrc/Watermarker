@@ -11,11 +11,11 @@
 //
 // `skippedVersion` / `disabled` are persisted through the settings store
 // (see persistence.svelte.ts, which snapshots them). Pure decision logic lives
-// in `$lib/updater` (unit-tested); this file owns reactive state + side effects.
+// in `#lib/updater` (unit-tested); this file owns reactive state + side effects.
 
 import { check, type Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { NO_UPDATE, toNotice, bannerVisible } from '$lib/updater';
+import { NO_UPDATE, toNotice, bannerVisible } from '#lib/updater.js';
 
 class UpdaterStore {
   notice = $state(NO_UPDATE);

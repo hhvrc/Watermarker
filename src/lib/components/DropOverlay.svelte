@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { dnd } from '$lib/services/dnd.svelte';
+  import { dnd } from '#lib/services/dnd.svelte.js';
 </script>
 
 {#if dnd.showOverlay}

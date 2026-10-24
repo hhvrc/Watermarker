@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ImageRef } from '$lib/types';
+  import type { ImageRef } from '#lib/types.js';
 
   interface Props {
     images: ImageRef[];
